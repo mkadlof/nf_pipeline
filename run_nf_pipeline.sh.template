@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# This script runs the nextflow pipeline with the given parameters
+nextflow run nf_pipeline.nf \
+    -config nextflow.config \
+    --reference_genome path/to/reference/genome.fasta \
+    --reads 'path/to/reads/sample_id_{1,2}.fastq.gz' \
+    -with-dag flowchart.png \
+    -with-report report.html \
+    -resume
+
+rm .nextflow.log.*

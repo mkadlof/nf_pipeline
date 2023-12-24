@@ -1,0 +1,16 @@
+# PyCharm IDE files
+.idea
+
+# Files that must be adjusted to local environment
+run_nf_pipeline.sh
+
+# Results
+work
+flowchart.png
+report.html
+
+# Logs
+.nextflow.log*
+
+# caches
+.nextflow

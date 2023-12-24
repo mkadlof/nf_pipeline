@@ -1,0 +1,2 @@
+biopython==1.82
+python-magic==0.4.27
