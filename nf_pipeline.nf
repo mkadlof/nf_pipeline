@@ -36,11 +36,62 @@ process bwaMapping {
 
     script:
     """
-    bwa mem -t `nproc` ${reference_genome} ${reads[0]} ${reads[1]} | samtools view -Sb - > mapped_reads.bam
+    bwa mem -t `nproc` ${reference_genome} ${reads[0]} ${reads[1]} | samtools view -b - > mapped_reads.bam
     """
 }
 
+process samtoolsViewFilter {
+    input:
+    path inputBam
 
+    output:
+    path 'output_filtered.bam'
+
+    script:
+    """
+    samtools view -b ${inputBam} -F 2820 -T 30 > output_filtered.bam
+    """
+}
+
+process samtoolsSort {
+    input:
+    path bam_file
+
+    output:
+    path 'sorted_reads.bam'
+
+    script:
+    """
+    samtools sort ${bam_file} -o sorted_reads.bam
+    """
+}
+
+process samtoolsIndex {
+    input:
+    path bam_file
+
+    output:
+    path "${bam_file}.bai"
+
+    script:
+    """
+    samtools index ${bam_file}
+    """
+}
+
+process simpleFilterAmpliconMk {
+    input:
+    path inputBam
+    path index
+
+    output:
+    path 'output_sorted_downsampled.bam'
+
+    script:
+    """
+    simple_filter_amplicon_mk_illumina.py --cycles 30 --mode paired ${inputBam} output_sorted_downsampled.bam
+    """
+}
 
 
 workflow {
@@ -49,4 +100,8 @@ workflow {
     genomeStats(reference_genome)
     index = bwaIndex(reference_genome)
     bwaMapping(reference_genome, index, reads)
+    samtoolsViewFilter(bwaMapping.out)
+    samtoolsSort(samtoolsViewFilter.out)
+    samtoolsIndex(samtoolsSort.out)
+    simpleFilterAmpliconMk(samtoolsSort.out, samtoolsIndex.out)
 }

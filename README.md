@@ -1,6 +1,10 @@
 # Nextflow experimental pipeline for the analysis of the SARS-CoV-2 genome
 
-This is experimental pipline used for the analysis SAR-CoV-2 genome, and exploration of the Nextflow framework.
+This is experimental pipline used for the analysis SAR-CoV-2 genome, and exploration of the [Nextflow](https://www.nextflow.io/docs/latest/index.html) framework.
+
+Currently, the pipeline performs the following steps:
+
+![flowchart](flowchart.png "overview of the pipeline")
 
 # Dependencies
 
@@ -17,11 +21,11 @@ Also install packages from `requirements.txt`:
 
 # Installation
 
-Download and install [Nextflow](https://www.nextflow.io/) with command: 
+Download and install the latest version of [Nextflow](https://www.nextflow.io/). Run it wherever you wish to keep executable. Use the command: 
 
     wget -qO- https://get.nextflow.io | bash
 
-put the resulting `nextflow` executable in your `$PATH`.
+And put the resulting `nextflow` executable in your `$PATH`.
 
 # Make a copy of run script and adjust run parameters
 
@@ -43,4 +47,4 @@ Reads MUST:
 # Results
 
 Results will be in the `work` directory.
-In addition, files `flowchart.png` and `report.html` will be generated in project root directory.
+In addition, `report.html` will be generated in project root directory.
