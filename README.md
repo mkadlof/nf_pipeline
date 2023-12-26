@@ -14,10 +14,14 @@ This pipeline requires the following software to be installed:
 - bwa
 - samtools
 - nproc
+- [picard](https://broadinstitute.github.io/picard/)
+- [gatk4](https://gatk.broadinstitute.org/hc/en-us)
 
 Also install packages from `requirements.txt`:
 
     pip install -r requirements.txt
+
+By default, picard is expected to be in /opt/picard/picard.jar, and gatk4 is expected to be in /opt/gatk/gatk. If you have them installed elsewhere, you can specify their location with the `--picardPath` and `--gatkPath` flags, respectively in `run_nf_pipeline.sh` file.
 
 # Installation
 
@@ -27,20 +31,30 @@ Download and install the latest version of [Nextflow](https://www.nextflow.io/).
 
 And put the resulting `nextflow` executable in your `$PATH`.
 
-# Make a copy of run script and adjust run parameters
+# Run script
+
+Make a copy of run script and adjust run parameters by copying the template:
 
     cp run_nf_pipeline.sh.template run_nf_pipeline.sh
 
 Edit flags in `run_nf_pipeline.sh` to adjust the run parameters.
-- --reference_genome : path to the reference genome (fasta file)
-- --reads : path to the reads (fastq file).
+
+##### Mandatory params
+- `--reference_genome` : path to the reference genome (fasta file)
+- `--reads` : path to the reads (fastq file).
  
 Reads MUST:
  - be a single path to two files.
  - be enclosed in single quotes (e.g. `'path/to/reads/*_{1,2}.fastq.gz'`).
  - be in the format `*_{1,2}.fastq.gz` (e.g. `sample1_1.fastq.gz` and `sample1_2.fastq.gz`).
 
-# Run the pipeline locally 
+##### Optional params
+- `--picardPath` : path to picard jar file (default: /opt/picard/picard.jar)
+- `--gatkPath` : path to gatk jar file (default: /opt/gatk/gatk)
+
+# Run pipeline
+
+Run the pipeline locally with:
 
     ./run_nf_pipeline.sh
 
