@@ -1,7 +1,7 @@
 process simpleFilterAmpliconMk {
     input:
     path inputBam
-    path index
+    path indexBai
 
     output:
     path 'output_sorted_downsampled.bam'

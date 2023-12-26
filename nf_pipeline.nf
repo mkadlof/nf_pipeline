@@ -9,11 +9,14 @@ include { samtoolsIndex as samtoolsIndex_2 } from './modules/samtoolsIndex.nf'
 include { samtoolsSort as samtoolsSort_1 } from './modules/samtoolsSort.nf'
 include { samtoolsSort as samtoolsSort_2 } from './modules/samtoolsSort.nf'
 
-include { genomeStats } from './modules/genome_stats.nf'
 include { bwaIndex } from './modules/bwaIndex.nf'
 include { bwaMapping } from './modules/bwaMapping.nf'
 include { samtoolsViewFilter } from './modules/samtoolsViewFilter.nf'
 include { simpleFilterAmpliconMk } from './modules/simpleFilterAmpliconMk.nf'
+
+// Include modules for statistics
+include { genomeStats } from './modules/genomeStats.nf'
+include { bamStats } from './modules/bamStats.nf'
 
 // Workflow definition
 
@@ -29,4 +32,5 @@ workflow {
     samtoolsSort_2(samtoolsViewFilter.out)
     samtoolsIndex_2(samtoolsSort_2.out)
     simpleFilterAmpliconMk(samtoolsSort_2.out, samtoolsIndex_2.out)
+    bamStats(samtoolsSort_1.out, samtoolsIndex_1.out)
 }
