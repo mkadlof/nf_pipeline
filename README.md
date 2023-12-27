@@ -1,4 +1,4 @@
-# Nextflow experimental pipeline for the analysis of the SARS-CoV-2 genome
+# Nextflow experimental pipeline for the SARS-CoV-2 WGS data
 
 This is experimental pipline used for the analysis SAR-CoV-2 genome, and exploration of the [Nextflow](https://www.nextflow.io/docs/latest/index.html) framework.
 
@@ -41,12 +41,14 @@ Edit flags in `run_nf_pipeline.sh` to adjust the run parameters.
 
 ##### Mandatory params
 - `--reference_genome` : path to the reference genome (fasta file)
-- `--reads` : path to the reads (fastq file).
+- `--reads` : path to the reads (fastq files).
  
-Reads MUST:
- - be a single path to two files.
- - be enclosed in single quotes (e.g. `'path/to/reads/*_{1,2}.fastq.gz'`).
- - be in the format `*_{1,2}.fastq.gz` (e.g. `sample1_1.fastq.gz` and `sample1_2.fastq.gz`).
+> [!IMPORTANT]
+> Reads MUST:
+>  - be a single path to one or more file **pairs**.
+>  - be enclosed in single quotes
+> Example:  `'path/to/reads/sample_*_{1,2}.fastq.gz'`
+
 
 ##### Optional params
 - `--picardPath` : path to picard jar file (default: /opt/picard/picard.jar)

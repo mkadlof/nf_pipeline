@@ -8,8 +8,10 @@ run_nf_pipeline.sh
 work
 report.html
 
-# Logs
+# Logs and traces
 .nextflow.log*
+trace-*.txt
+timeline-*.html
 
 # caches
 .nextflow

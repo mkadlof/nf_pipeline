@@ -13,6 +13,7 @@ include { samtoolsIndex as samtoolsIndex_1 } from './modules/samtoolsIndex.nf'
 include { samtoolsIndex as samtoolsIndex_2 } from './modules/samtoolsIndex.nf'
 include { samtoolsIndex as samtoolsIndex_3 } from './modules/samtoolsIndex.nf'
 
+// Include one-time use modules
 include { samtoolsSort as samtoolsSort } from './modules/samtoolsSort.nf'
 include { bwaIndex } from './modules/bwaIndex.nf'
 include { bwaMapping } from './modules/bwaMapping.nf'
@@ -33,8 +34,11 @@ include { combineJsonFiles_x4 } from './modules/combineJsonFiles.nf'
 // Workflow definition
 
 workflow {
-    reference_genome = Channel.fromPath(params.reference_genome)
+    // Channels
+    reference_genome = Channel.value(params.reference_genome as Path)
     reads = Channel.fromFilePairs(params.reads)
+
+    // Processes
     genomeStats(reference_genome)
     index = bwaIndex(reference_genome)
     bwaMapping(reference_genome, index, reads)
