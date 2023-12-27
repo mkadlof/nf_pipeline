@@ -12,9 +12,8 @@ params.gatkPath = "/opt/gatk/gatk"
 include { samtoolsIndex as samtoolsIndex_1 } from './modules/samtoolsIndex.nf'
 include { samtoolsIndex as samtoolsIndex_2 } from './modules/samtoolsIndex.nf'
 include { samtoolsIndex as samtoolsIndex_3 } from './modules/samtoolsIndex.nf'
-include { samtoolsSort as samtoolsSort_1 } from './modules/samtoolsSort.nf'
-include { samtoolsSort as samtoolsSort_2 } from './modules/samtoolsSort.nf'
 
+include { samtoolsSort as samtoolsSort } from './modules/samtoolsSort.nf'
 include { bwaIndex } from './modules/bwaIndex.nf'
 include { bwaMapping } from './modules/bwaMapping.nf'
 include { samtoolsViewFilter } from './modules/samtoolsViewFilter.nf'
@@ -39,14 +38,13 @@ workflow {
     genomeStats(reference_genome)
     index = bwaIndex(reference_genome)
     bwaMapping(reference_genome, index, reads)
-    samtoolsSort_1(bwaMapping.out)
-    samtoolsIndex_1(samtoolsSort_1.out)
-    samtoolsViewFilter(bwaMapping.out)
-    samtoolsSort_2(samtoolsViewFilter.out)
-    samtoolsIndex_2(samtoolsSort_2.out)
-    bamStats_2(samtoolsSort_2.out, samtoolsIndex_2.out)
-    simpleFilterAmpliconMk(samtoolsSort_2.out, samtoolsIndex_2.out)
-    bamStats_1(samtoolsSort_1.out, samtoolsIndex_1.out)
+    samtoolsSort(bwaMapping.out)
+    samtoolsIndex_1(samtoolsSort.out)
+    samtoolsViewFilter(samtoolsSort.out)
+    samtoolsIndex_2(samtoolsViewFilter.out)
+    bamStats_2(samtoolsViewFilter.out, samtoolsIndex_2.out)
+    simpleFilterAmpliconMk(samtoolsViewFilter.out, samtoolsIndex_2.out)
+    bamStats_1(samtoolsSort.out, samtoolsIndex_1.out)
     samtoolsIndex_3(simpleFilterAmpliconMk.out)
     fixReadGroups(simpleFilterAmpliconMk.out)
     samtoolsFaidx(reference_genome)
