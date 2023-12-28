@@ -64,3 +64,20 @@ Run the pipeline locally with:
 
 Results will be in the `work` directory.
 In addition, `report.html` will be generated in project root directory.
+
+# Docker
+To build the docker image, use the following command:
+
+    docker build -t nf-pipeline:latest .
+
+To run the pipeline in a docker container, use something similar to the following command:
+
+    docker run -it --rm \
+        -v /path/to/reads:/home/reads:ro \
+        -v /path/to/reference_genome:/home/reference_genome:ro \
+        -v /path/to/work:/home/nf-pipeline/work\
+        -v /path/to/results:/home/nf_pipline/results \
+        nf-pipeline:latest \
+        nextflow run nf_pipeline.nf \
+            --reference_genome /data/reference_genome/sarscov2.fasta \
+            --reads '/data/reads/sample_*_{1,2}.fastq.gz'
