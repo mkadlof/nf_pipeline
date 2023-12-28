@@ -6,6 +6,7 @@ run_nf_pipeline.sh
 
 # Results
 work
+results
 report.html
 
 # Logs and traces

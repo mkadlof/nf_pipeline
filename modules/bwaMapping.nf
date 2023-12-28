@@ -7,7 +7,7 @@ process bwaMapping {
     tuple val(sampleId), path(reads)
 
     output:
-    path 'mapped_reads.bam'
+    tuple val(sampleId), path('mapped_reads.bam')
 
     script:
     """

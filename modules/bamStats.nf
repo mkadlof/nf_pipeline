@@ -1,12 +1,13 @@
 process bamStats {
     input:
-    path inputBam
+    tuple val(sampleID), path(inputBam)
     path indexBai
+
     output:
-    path 'bamStats.json.gz'
+    tuple val(sampleID), path('bamStats.json.gz')
 
     script:
     """
-    bamStats.py ${inputBam}
+    bamStats.py ${inputBam} --sample ${sampleID}
     """
 }

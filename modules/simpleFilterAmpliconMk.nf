@@ -1,10 +1,10 @@
 process simpleFilterAmpliconMk {
     input:
-    path inputBam
-    path indexBai
+    tuple val(sampleId1), path(inputBam)
+    path(indexBai)
 
     output:
-    path 'output_sorted_downsampled.bam'
+    tuple val(sampleId1), path('output_sorted_downsampled.bam')
 
     script:
     """

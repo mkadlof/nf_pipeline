@@ -1,9 +1,9 @@
 process samtoolsSort {
     input:
-    path bam_file
+    tuple val(sampleId), path(bam_file)
 
     output:
-    path 'sorted_reads.bam'
+    tuple val(sampleId), path('sorted_reads.bam')
 
     script:
     """

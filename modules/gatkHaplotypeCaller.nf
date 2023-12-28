@@ -1,12 +1,15 @@
 process gatkHaplotypeCaller {
+    publishDir "results/${sampleId1}", mode: 'symlink'
+
     input:
     path reference_genome_fasta, name: 'reference_genome.fasta'
     path reference_genome_fai, name: 'reference_genome.fasta.fai'
     path reference_genome_dict, name: 'reference_genome.dict'
-    path inputBam
+    tuple val(sampleId1), path(inputBam)
+    tuple val(sampleId2), path(inputBamBai)
+
     output:
-    path 'gatkHaplotypeCaller.vcf.gz'
-    path 'gatkHaplotypeCaller.bam'
+    tuple val(sampleId1), path('gatkHaplotypeCaller.vcf.gz')
 
     script:
     """
@@ -14,7 +17,6 @@ process gatkHaplotypeCaller {
      -R ${reference_genome_fasta} \
      -I ${inputBam} \
      -O gatkHaplotypeCaller.vcf.gz \
-     -bamout gatkHaplotypeCaller.bam \
      -ploidy 1
     """
 }

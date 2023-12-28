@@ -1,9 +1,11 @@
 process samtoolsViewFilter {
+    publishDir "results/${sampleId}", mode: 'symlink'
+
     input:
-    path inputBam
+    tuple val(sampleId), path(inputBam)
 
     output:
-    path 'output_filtered.bam'
+    tuple val(sampleId), path('output_filtered.bam')
 
     script:
     """

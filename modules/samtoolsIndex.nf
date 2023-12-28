@@ -1,6 +1,8 @@
 process samtoolsIndex {
+    publishDir "results/${sampleId}", mode: 'symlink', pattern: 'output_filtered.bam.bai'
+
     input:
-    path bam_file
+    tuple val(sampleId), path(bam_file)
 
     output:
     path "${bam_file}.bai"
