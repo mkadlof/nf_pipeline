@@ -70,14 +70,17 @@ To build the docker image, use the following command:
 
     docker build -t nf-pipeline:latest .
 
-To run the pipeline in a docker container, use something similar to the following command:
+Container contains only scripts and executables, actual pipeline definition have to be cloned from git, and run by natively installed nextflow.
 
-    docker run -it --rm \
-        -v /path/to/reads:/home/reads:ro \
-        -v /path/to/reference_genome:/home/reference_genome:ro \
-        -v /path/to/work:/home/nf-pipeline/work\
-        -v /path/to/results:/home/nf_pipline/results \
-        nf-pipeline:latest \
-        nextflow run nf_pipeline.nf \
-            --reference_genome /data/reference_genome/sarscov2.fasta \
-            --reads '/data/reads/sample_*_{1,2}.fastq.gz'
+Here is an example of running the pipeline in docker container:
+
+    nextflow run nf_pipeline.nf \
+     --reference_genome /path/to/reference/genome.fasta \
+     --reads '/path/to/reads/sample.*_{1,2}.fastq.gz' \
+     -config nextflow.config \
+     -with-dag flowchart.png \
+     -with-report report.html \
+     -with-docker nf-pipeline:latest \
+     -resume
+
+Further reading: [Nextflow Docker](https://www.nextflow.io/docs/latest/container.html#docker)
