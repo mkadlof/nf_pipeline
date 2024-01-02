@@ -77,7 +77,7 @@ def down_sample_bam(input_bam_path: str,
                     cycles: int = 30,
                     chromosomes: Union[list[str], str] = 'all',
                     mode: str = 'single') -> None:
-    """Downsample bam file."""
+    """Down-sample bam file."""
     input_bam_file = pysam.AlignmentFile(input_bam_path, "rb")
     output_bam_file = pysam.AlignmentFile(output_bam_path, "wb", template=input_bam_file)
     list_of_chr = get_list_of_chr(input_bam_file, chromosomes)
@@ -98,7 +98,7 @@ def down_sample_bam(input_bam_path: str,
 
 
 def run_mode_single(bam_file: str, chr_id: str, cycles: int, output_bam: str) -> None:
-    """Run downsampling in single reads mode."""
+    """Run down-sampling in single reads mode."""
     last_covered = -1
     reads = list(bam_file.fetch(region=chr_id))
     number_of_reads = len(reads)

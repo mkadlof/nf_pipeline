@@ -23,6 +23,8 @@ include { fixReadGroups } from './modules/fixReadGroups.nf'
 include { gatkHaplotypeCaller } from './modules/gatkHaplotypeCaller.nf'
 include { samtoolsFaidx } from './modules/samtoolsFaidx.nf'
 include { gatkCreateSequenceDictionary } from './modules/gatkCreateSequenceDictionary.nf'
+include { vcf2fasta } from './modules/vcf2fasta.nf'
+include { tabix } from './modules/tabix.nf'
 
 // Include modules for statistics
 include { genomeStats } from './modules/genomeStats.nf'
@@ -56,4 +58,6 @@ workflow {
     gatkHaplotypeCaller(reference_genome, samtoolsFaidx.out, gatkCreateSequenceDictionary.out, fixReadGroups.out)
     bamStats_3(simpleFilterAmpliconMk.out, samtoolsIndex_3.out)
     combineJsonFiles_x4(genomeStats.out, bamStats_1.out, bamStats_2.out, bamStats_3.out)
+    tabix(gatkHaplotypeCaller.out)
+    vcf2fasta(reference_genome, gatkHaplotypeCaller.out, tabix.out)
 }

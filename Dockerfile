@@ -11,7 +11,9 @@ RUN apt update && \
                                            unzip \
                                            samtools \
                                            bwa \
-                                           procps
+                                           procps \
+                                           tabix \
+                                           bcftools
 
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
