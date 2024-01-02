@@ -11,6 +11,6 @@ process bwaMapping {
 
     script:
     """
-    bwa mem -t `nproc` ${reference_genome} ${reads[0]} ${reads[1]} | samtools view -b - > mapped_reads.bam
+    bwa mem -t ${params.threads} ${reference_genome} ${reads[0]} ${reads[1]} | samtools view -b - > mapped_reads.bam
     """
 }

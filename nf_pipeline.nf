@@ -2,6 +2,7 @@
 // Pipeline configuration
 params.picardPath = "/opt/picard/picard.jar"
 params.gatkPath = "/opt/gatk/gatk"
+params.threads = 5
 
 // Process - we keep them in modules in ./modules dir and include them here.
 
