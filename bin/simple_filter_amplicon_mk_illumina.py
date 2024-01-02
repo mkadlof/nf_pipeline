@@ -9,27 +9,7 @@ from collections import defaultdict
 from typing import Optional, Union
 
 import pysam
-
-
-def progress_bar_forward(total: int, progress: int, prefix: str) -> str:
-    """Return progress bar string."""
-    bar_length = 40
-    completed = '=' * int(bar_length * progress // total)
-    remaining = ' ' * (bar_length - len(completed))
-    if remaining:
-        remaining = '>' + remaining[1:]
-    return f"{prefix} [{completed}{remaining}]"
-
-
-def progress_bar_reverse(total: int, progress: int, prefix: str) -> str:
-    """Return progress bar string."""
-    progress = total - progress
-    bar_length = 40
-    completed = '=' * int(bar_length * progress // total)
-    remaining = ' ' * (bar_length - len(completed))
-    if completed:
-        completed = '<' + completed[1:]
-    return f"{prefix} [{remaining}{completed}]"
+from bitarray import bitarray
 
 
 def read_pair_generator(bam: pysam.AlignmentFile, region_string: Optional[str] = None) -> (pysam.AlignedSegment, pysam.AlignedSegment):
@@ -97,12 +77,40 @@ def down_sample_bam(input_bam_path: str,
     print("Done.")
 
 
-def run_mode_single(bam_file: str, chr_id: str, cycles: int, output_bam: str) -> None:
+def get_number_of_reads(bam_file: pysam.AlignmentFile, chr_id: str) -> int:
+    """Get number of reads in bam file."""
+    stats = bam_file.get_index_statistics()
+    for statsObj in stats:
+        if statsObj.contig == chr_id:
+            return statsObj.mapped
+    raise ValueError(f"Chromosome {chr_id} not found in bam index.")
+
+
+def run_mode_single(bam_file: pysam.AlignmentFile, chr_id: str, cycles: int, output_bam: pysam.AlignmentFile) -> None:
+    """Run down-sampling in single reads mode."""
+    number_of_reads = get_number_of_reads(bam_file, chr_id)
+    last_covered = -1
+    used_reads = bitarray(number_of_reads)
+    direction = '>'
+    for c in range(cycles):
+        print(f"Cycle {c + 1} {direction}")
+        for i, r1 in enumerate(bam_file.fetch(region=chr_id)):
+            if used_reads[i]:
+                continue
+            if r1.reference_start > last_covered:
+                output_bam.write(r1)
+                last_covered = r1.reference_end - 1
+                used_reads[i] = 1
+        last_covered = -1
+    output_bam.close()
+
+
+def run_mode_single_two_way(bam_file: pysam.AlignmentFile, chr_id: str, cycles: int, output_bam: pysam.AlignmentFile) -> None:
     """Run down-sampling in single reads mode."""
     last_covered = -1
     reads = list(bam_file.fetch(region=chr_id))
     number_of_reads = len(reads)
-    direction = '>'
+    direction = '<'
     for c in range(cycles):
         print(f"Cycle {c + 1} {direction}")
         if direction == '>':
@@ -112,7 +120,7 @@ def run_mode_single(bam_file: str, chr_id: str, cycles: int, output_bam: str) ->
                     continue
                 if r1.reference_start > last_covered:
                     output_bam.write(r1)
-                    last_covered = r1.reference_end
+                    last_covered = r1.reference_end - 1
                     reads[i] = None
         else:
             for i in range(number_of_reads - 1, -1, -1):
@@ -121,16 +129,14 @@ def run_mode_single(bam_file: str, chr_id: str, cycles: int, output_bam: str) ->
                     continue
                 if r1.reference_end < last_covered:
                     output_bam.write(r1)
-                    last_covered = r1.reference_start
+                    last_covered = r1.reference_start + 1
                     reads[i] = None
         direction = '>' if direction == '<' else '<'
         last_covered = -1 if direction == '>' else float('inf')
     output_bam.close()
 
 
-
-
-def run_mode_paired(bam_file: str, chr_id: str, cycles: int, output_bam: str) -> None:
+def run_mode_paired(bam_file: pysam.AlignmentFile, chr_id: str, cycles: int, output_bam: pysam.AlignmentFile) -> None:
     """Run downsampling in paired mode (Paired reads)."""
     last_covered = -1
     reads = []
