@@ -7,6 +7,7 @@ RUN apt update && \
                                            python3-biopython \
                                            python3-magic  \
                                            python3-pysam \
+                                           python3-bitarray \
                                            curl \
                                            unzip \
                                            samtools \
