@@ -19,12 +19,20 @@ def analyze_bam_file(bam_file: str, sample: str) -> dict:
     }
     stats["meta"] = meta
 
-    bam_stats={
+    # This situation should never happen, but we don't want to crash if it does.
+    if f.mapped + f.unmapped != 0:
+        mapped_fraction = f.mapped / (f.mapped + f.unmapped)
+        unmapped_fraction = f.unmapped / (f.mapped + f.unmapped)
+    else:
+        mapped_fraction = "NaN"
+        unmapped_fraction = "NaN"
+
+    bam_stats = {
         "mapped": f.mapped,
         "unmapped": f.unmapped,
         "total": f.mapped + f.unmapped,
-        "mapped_fraction": f.mapped / (f.mapped + f.unmapped),
-        "unmapped_fraction": f.unmapped / (f.mapped + f.unmapped),
+        "mapped_fraction": mapped_fraction,
+        "unmapped_fraction": unmapped_fraction
     }
     stats["bam_stats"] = bam_stats
     return stats
