@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Script for downsampling bam file trying to keep the coverage uniform."""
+"""Script for down-sampling bam file trying to keep the coverage uniform."""
 
 # ruff: noqa: T201, Q000, TRY0003, FA100
 
@@ -87,7 +87,10 @@ def get_number_of_reads(bam_file: pysam.AlignmentFile, chr_id: str) -> int:
 
 
 def run_mode_single(bam_file: pysam.AlignmentFile, chr_id: str, cycles: int, output_bam: pysam.AlignmentFile) -> None:
-    """Run down-sampling in single reads mode."""
+    """Run down-sampling in single reads mode.
+
+    This mode is one-way mode. In each cycle, reads
+    are processed from the beginning to the end."""
     number_of_reads = get_number_of_reads(bam_file, chr_id)
     last_covered = -1
     used_reads = bitarray(number_of_reads)
@@ -107,6 +110,8 @@ def run_mode_single(bam_file: pysam.AlignmentFile, chr_id: str, cycles: int, out
 
 def run_mode_single_two_way(bam_file: pysam.AlignmentFile, chr_id: str, cycles: int, output_bam: pysam.AlignmentFile) -> None:
     """Run down-sampling in single reads mode."""
+    # TODO memory inefficient
+    # TODO Two way mode is used only for experiments.
     last_covered = -1
     reads = list(bam_file.fetch(region=chr_id))
     number_of_reads = len(reads)
@@ -137,7 +142,8 @@ def run_mode_single_two_way(bam_file: pysam.AlignmentFile, chr_id: str, cycles: 
 
 
 def run_mode_paired(bam_file: pysam.AlignmentFile, chr_id: str, cycles: int, output_bam: pysam.AlignmentFile) -> None:
-    """Run downsampling in paired mode (Paired reads)."""
+    """Run down-sampling in paired mode (Paired reads)."""
+    # TODO memory inefficient
     last_covered = -1
     reads = []
     for r1, r2 in read_pair_generator(bam_file, region_string=chr_id):

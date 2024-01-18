@@ -8,6 +8,6 @@ process simpleFilterAmpliconMk {
 
     script:
     """
-    simple_filter_amplicon_mk_illumina.py --cycles 30 --mode paired ${inputBam} output_sorted_downsampled.bam
+    simple_filter_amplicon_mk_illumina.py --cycles 30 --mode single ${inputBam} output_sorted_downsampled.bam
     """
 }
