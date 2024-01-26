@@ -2,7 +2,6 @@ FROM debian:12.4-slim
 
 RUN apt update && \
     apt install -y --no-install-recommends openjdk-17-jre-headless \
-                                           git \
                                            python3 \
                                            python3-biopython \
                                            python3-magic  \
@@ -14,7 +13,8 @@ RUN apt update && \
                                            bwa \
                                            procps \
                                            tabix \
-                                           bcftools
+                                           bcftools \
+                                           vim
 
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
@@ -28,5 +28,5 @@ RUN curl -fsSL https://github.com/broadinstitute/gatk/releases/download/4.5.0.0/
     rm gatk-4.5.0.0.zip && \
     ln -s /opt/gatk-4.5.0.0 /opt/gatk
 
-RUN git clone https://github.com/mkadlof/nf_pipeline /home/nf_pipeline
+#ADD . /home/nf_pipeline
 WORKDIR /home/nf_pipeline

@@ -77,21 +77,12 @@ def down_sample_bam(input_bam_path: str,
     print("Done.")
 
 
-def get_number_of_reads(bam_file: pysam.AlignmentFile, chr_id: str) -> int:
-    """Get number of reads in bam file."""
-    stats = bam_file.get_index_statistics()
-    for statsObj in stats:
-        if statsObj.contig == chr_id:
-            return statsObj.mapped
-    raise ValueError(f"Chromosome {chr_id} not found in bam index.")
-
-
 def run_mode_single(bam_file: pysam.AlignmentFile, chr_id: str, cycles: int, output_bam: pysam.AlignmentFile) -> None:
     """Run down-sampling in single reads mode.
 
     This mode is one-way mode. In each cycle, reads
     are processed from the beginning to the end."""
-    number_of_reads = get_number_of_reads(bam_file, chr_id)
+    number_of_reads = bam_file.count(chr_id)
     last_covered = -1
     used_reads = bitarray(number_of_reads)
     direction = '>'
