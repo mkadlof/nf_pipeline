@@ -1,3 +1,5 @@
+params.cycles = 30
+
 process simpleFilterAmpliconMk {
     input:
     tuple val(sampleId1), path(inputBam)

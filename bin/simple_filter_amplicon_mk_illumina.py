@@ -6,7 +6,7 @@
 
 import argparse
 from collections import defaultdict
-from typing import Optional, Union
+from typing import Optional, Union, List, Tuple
 
 import pysam
 from bitarray import bitarray
@@ -52,36 +52,22 @@ def get_list_of_chr(bam_file: pysam.AlignmentFile, chr_list: list) -> list[str]:
     return chrs_in_bam
 
 
-def down_sample_bam(input_bam_path: str,
-                    output_bam_path: str,
-                    cycles: int = 30,
-                    chromosomes: Union[list[str], str] = 'all',
-                    mode: str = 'single') -> None:
-    """Down-sample bam file."""
-    input_bam_file = pysam.AlignmentFile(input_bam_path, "rb")
-    output_bam_file = pysam.AlignmentFile(output_bam_path, "wb", template=input_bam_file)
-    list_of_chr = get_list_of_chr(input_bam_file, chromosomes)
-    for chr_id in list_of_chr:
-        print(f"Processing chromosome {chr_id}...")
-        if mode == 'single':
-            run_mode_single(input_bam_file, chr_id, cycles, output_bam_file)
-        elif mode == 'paired':
-            run_mode_paired(input_bam_file, chr_id, cycles, output_bam_file)
-        else:
-            msg = f"Unknown mode: {mode}"
-            raise ValueError(msg)
-    print(f"Output bam file: {output_bam_path} saved.")
-    print(f"Sorting and indexing {output_bam_path} file...")
-    pysam.sort("-o", output_bam_path, output_bam_path)
-    pysam.index(output_bam_path)
-    print("Done.")
+def organize_reads(bam_file: pysam.AlignmentFile, chr_id: str) -> List[Tuple[List[int], List[int]]]:
+    """Organize reads in a convenient data structure.
+
+    In result, we got a list of the length of chromosome.
+    For each position we have a pair of lists.
+    First list contains indexes of reads starting at this position.
+    Second list contains indexes of reads ending at this position.
+    """
+    organized_reads = [([], []) for _ in range(bam_file.get_reference_length(chr_id))]
+    for i, read in enumerate(bam_file.fetch(region=chr_id)):
+        organized_reads[read.reference_start][0].append((i, read))
+        organized_reads[read.reference_end - 1][1].append((i, read))
+    return organized_reads
 
 
-def run_mode_single(bam_file: pysam.AlignmentFile, chr_id: str, cycles: int, output_bam: pysam.AlignmentFile) -> None:
-    """Run down-sampling in single reads mode.
-
-    This mode is one-way mode. In each cycle, reads
-    are processed from the beginning to the end."""
+def run_mode_single_old(bam_file: pysam.AlignmentFile, chr_id: str, cycles: int, output_bam: pysam.AlignmentFile):
     number_of_reads = bam_file.count(chr_id)
     last_covered = -1
     used_reads = bitarray(number_of_reads)
@@ -96,6 +82,87 @@ def run_mode_single(bam_file: pysam.AlignmentFile, chr_id: str, cycles: int, out
                 last_covered = r1.reference_end - 1
                 used_reads[i] = 1
         last_covered = -1
+    output_bam.close()
+
+
+def down_sample_bam(input_bam_path: str,
+                    output_bam_path: str,
+                    cycles: int = 30,
+                    chromosomes: Union[list[str], str] = 'all',
+                    mode: str = 'single') -> None:
+    """Down-sample bam file."""
+    input_bam_file = pysam.AlignmentFile(input_bam_path, "rb")
+    output_bam_file = pysam.AlignmentFile(output_bam_path, "wb", template=input_bam_file)
+    list_of_chr = get_list_of_chr(input_bam_file, chromosomes)
+    for chr_id in list_of_chr:
+        print(f"Processing chromosome {chr_id}...")
+        # organized_reads = organize_reads(input_bam_file, chr_id)
+        if mode == 'single':
+            run_mode_single(input_bam_file, chr_id, cycles, output_bam_file)
+        elif mode == 'paired':
+            run_mode_paired(input_bam_file, chr_id, cycles, output_bam_file)
+        else:
+            msg = f"Unknown mode: {mode}"
+            raise ValueError(msg)
+    print(f"Output bam file: {output_bam_path} saved.")
+    print(f"Sorting and indexing {output_bam_path} file...")
+    pysam.sort("-o", output_bam_path, output_bam_path)
+    pysam.index(output_bam_path)
+    for chr_id in list_of_chr:
+        print(f"Mean coverage for {chr_id}", bam_mean_coverage(pysam.AlignmentFile(output_bam_path, 'rb'), chr_id))
+    print("Done.")
+
+
+def bam_mean_coverage(bam_file: pysam.AlignmentFile, chr_id: str) -> float:
+    """Calculate mean coverage for a chromosome.
+
+    For each position in a chromosome, we check how many reads start at this position using mpileup engine.
+    We sum all these values and divide by the length of the chromosome.
+    """
+    coverage = 0
+    for pileup_column in bam_file.pileup(chr_id):
+        coverage += pileup_column.nsegments
+    return coverage / bam_file.get_reference_length(chr_id)
+
+
+def run_mode_single(bam_file: pysam.AlignmentFile, chr_id: str, cycles: int, output_bam: pysam.AlignmentFile) -> None:
+    """Run down-sampling in single reads mode.
+
+    This mode is one-way mode. In each cycle, reads
+    are processed from the beginning to the end."""
+    number_of_reads = bam_file.count(chr_id)
+    genome_length = bam_file.get_reference_length(chr_id)
+    used_reads = bitarray(number_of_reads)
+    print("Building organized reads data structure...")
+    organized_reads = organize_reads(bam_file, chr_id)
+    direction = '>'
+    for c in range(cycles):
+        print(f"Cycle {c + 1} {direction}")
+        last_covered = 0
+        if direction == '>':
+            while last_covered < genome_length:
+                for i, r in organized_reads[last_covered][0]:
+                    if used_reads[i]:
+                        continue
+                    else:
+                        output_bam.write(r)
+                        last_covered = r.reference_end - 1
+                        used_reads[i] = 1
+                        break
+                last_covered += 1
+        else:
+            last_covered = genome_length
+            while last_covered > 0:
+                for i, r in organized_reads[last_covered - 1][1]:
+                    if used_reads[i]:
+                        continue
+                    else:
+                        output_bam.write(r)
+                        last_covered = r.reference_start
+                        used_reads[i] = 1
+                        break
+                last_covered -= 1
+        direction = '>' if direction == '<' else '<'
     output_bam.close()
 
 

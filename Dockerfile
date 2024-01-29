@@ -28,5 +28,4 @@ RUN curl -fsSL https://github.com/broadinstitute/gatk/releases/download/4.5.0.0/
     rm gatk-4.5.0.0.zip && \
     ln -s /opt/gatk-4.5.0.0 /opt/gatk
 
-#ADD . /home/nf_pipeline
 WORKDIR /home/nf_pipeline
