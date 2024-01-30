@@ -9,6 +9,6 @@ process samtoolsViewFilter {
 
     script:
     """
-    samtools view -b ${inputBam} -F 2820 -T 30 > output_filtered.bam
+    samtools view -@ ${params.threads} -b ${inputBam} -F 2820 -T 30 > output_filtered.bam
     """
 }

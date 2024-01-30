@@ -7,6 +7,6 @@ process samtoolsSort {
 
     script:
     """
-    samtools sort ${bam_file} -o sorted_reads.bam
+    samtools sort -@ ${params.threads} ${bam_file} -o sorted_reads.bam
     """
 }

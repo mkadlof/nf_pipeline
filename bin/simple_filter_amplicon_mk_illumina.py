@@ -11,6 +11,8 @@ from typing import Optional, Union, List, Tuple
 import pysam
 from bitarray import bitarray
 
+from nf_pipeline_utils import bam_mean_coverage, get_list_of_chr
+
 
 def read_pair_generator(bam: pysam.AlignmentFile, region_string: Optional[str] = None) -> (pysam.AlignedSegment, pysam.AlignedSegment):
     """Generate read pairs in a BAM file or within a region string.
@@ -35,54 +37,23 @@ def read_pair_generator(bam: pysam.AlignmentFile, region_string: Optional[str] =
             del read_dict[qname]
 
 
-def get_list_of_chr(bam_file: pysam.AlignmentFile, chr_list: list) -> list[str]:
-    """Get list of chromosomes to process.
-
-    If chr_list is 'all' then all chromosomes in bam file are returned.
-    Otherwise, only chromosomes from chr_list are returned.
-    If any chromosome from chr_list is not found in bam file, ValueError is raised.
-    """
-    chrs_in_bam = [x['SN'] for x in bam_file.header['SQ']]
-    if chr_list != 'all':
-        for chr_id in chr_list:
-            if chr_id not in chrs_in_bam:
-                error_msg = f"Chromosome {chr_id} not found in bam file."
-                raise ValueError(error_msg)
-        return chr_list
-    return chrs_in_bam
-
-
-def organize_reads(bam_file: pysam.AlignmentFile, chr_id: str) -> List[Tuple[List[int], List[int]]]:
+def organize_reads(bam_file: pysam.AlignmentFile, chr_id: str) -> Tuple[List[Tuple[List[int], List[int]]], List[pysam.AlignedSegment]]:
     """Organize reads in a convenient data structure.
 
     In result, we got a list of the length of chromosome.
     For each position we have a pair of lists.
     First list contains indexes of reads starting at this position.
     Second list contains indexes of reads ending at this position.
+
+    A second return value is a list of reads.
     """
-    organized_reads = [([], []) for _ in range(bam_file.get_reference_length(chr_id))]
-    for i, read in enumerate(bam_file.fetch(region=chr_id)):
-        organized_reads[read.reference_start][0].append((i, read))
-        organized_reads[read.reference_end - 1][1].append((i, read))
-    return organized_reads
-
-
-def run_mode_single_old(bam_file: pysam.AlignmentFile, chr_id: str, cycles: int, output_bam: pysam.AlignmentFile):
-    number_of_reads = bam_file.count(chr_id)
-    last_covered = -1
-    used_reads = bitarray(number_of_reads)
-    direction = '>'
-    for c in range(cycles):
-        print(f"Cycle {c + 1} {direction}")
-        for i, r1 in enumerate(bam_file.fetch(region=chr_id)):
-            if used_reads[i]:
-                continue
-            if r1.reference_start > last_covered:
-                output_bam.write(r1)
-                last_covered = r1.reference_end - 1
-                used_reads[i] = 1
-        last_covered = -1
-    output_bam.close()
+    genome_length = bam_file.get_reference_length(chr_id)
+    organized_reads = [([], []) for _ in range(genome_length)]
+    reads = list(bam_file.fetch(region=chr_id))
+    for i, read in enumerate(reads):
+        organized_reads[read.reference_start][0].append(i)
+        organized_reads[read.reference_end - 1][1].append(i)
+    return organized_reads, reads
 
 
 def down_sample_bam(input_bam_path: str,
@@ -96,7 +67,6 @@ def down_sample_bam(input_bam_path: str,
     list_of_chr = get_list_of_chr(input_bam_file, chromosomes)
     for chr_id in list_of_chr:
         print(f"Processing chromosome {chr_id}...")
-        # organized_reads = organize_reads(input_bam_file, chr_id)
         if mode == 'single':
             run_mode_single(input_bam_file, chr_id, cycles, output_bam_file)
         elif mode == 'paired':
@@ -113,35 +83,24 @@ def down_sample_bam(input_bam_path: str,
     print("Done.")
 
 
-def bam_mean_coverage(bam_file: pysam.AlignmentFile, chr_id: str) -> float:
-    """Calculate mean coverage for a chromosome.
-
-    For each position in a chromosome, we check how many reads start at this position using mpileup engine.
-    We sum all these values and divide by the length of the chromosome.
-    """
-    coverage = 0
-    for pileup_column in bam_file.pileup(chr_id):
-        coverage += pileup_column.nsegments
-    return coverage / bam_file.get_reference_length(chr_id)
-
-
 def run_mode_single(bam_file: pysam.AlignmentFile, chr_id: str, cycles: int, output_bam: pysam.AlignmentFile) -> None:
     """Run down-sampling in single reads mode.
 
-    This mode is one-way mode. In each cycle, reads
-    are processed from the beginning to the end."""
+    This is two-way mode for unpaired reads.
+    Memory O(n) where n is the number of reads.
+    Pretty fast.
+    """
     number_of_reads = bam_file.count(chr_id)
     genome_length = bam_file.get_reference_length(chr_id)
     used_reads = bitarray(number_of_reads)
-    print("Building organized reads data structure...")
-    organized_reads = organize_reads(bam_file, chr_id)
+    organized_reads, reads = organize_reads(bam_file, chr_id)
     direction = '>'
     for c in range(cycles):
-        print(f"Cycle {c + 1} {direction}")
-        last_covered = 0
         if direction == '>':
+            last_covered = 0
             while last_covered < genome_length:
-                for i, r in organized_reads[last_covered][0]:
+                for i in organized_reads[last_covered][0]:
+                    r = reads[i]
                     if used_reads[i]:
                         continue
                     else:
@@ -153,7 +112,8 @@ def run_mode_single(bam_file: pysam.AlignmentFile, chr_id: str, cycles: int, out
         else:
             last_covered = genome_length
             while last_covered > 0:
-                for i, r in organized_reads[last_covered - 1][1]:
+                for i in organized_reads[last_covered - 1][1]:
+                    r = reads[i]
                     if used_reads[i]:
                         continue
                     else:
@@ -163,39 +123,6 @@ def run_mode_single(bam_file: pysam.AlignmentFile, chr_id: str, cycles: int, out
                         break
                 last_covered -= 1
         direction = '>' if direction == '<' else '<'
-    output_bam.close()
-
-
-def run_mode_single_two_way(bam_file: pysam.AlignmentFile, chr_id: str, cycles: int, output_bam: pysam.AlignmentFile) -> None:
-    """Run down-sampling in single reads mode."""
-    # TODO memory inefficient
-    # TODO Two way mode is used only for experiments.
-    last_covered = -1
-    reads = list(bam_file.fetch(region=chr_id))
-    number_of_reads = len(reads)
-    direction = '<'
-    for c in range(cycles):
-        print(f"Cycle {c + 1} {direction}")
-        if direction == '>':
-            for i in range(number_of_reads):
-                r1 = reads[i]
-                if r1 is None:
-                    continue
-                if r1.reference_start > last_covered:
-                    output_bam.write(r1)
-                    last_covered = r1.reference_end - 1
-                    reads[i] = None
-        else:
-            for i in range(number_of_reads - 1, -1, -1):
-                r1 = reads[i]
-                if r1 is None:
-                    continue
-                if r1.reference_end < last_covered:
-                    output_bam.write(r1)
-                    last_covered = r1.reference_start + 1
-                    reads[i] = None
-        direction = '>' if direction == '<' else '<'
-        last_covered = -1 if direction == '>' else float('inf')
     output_bam.close()
 
 
