@@ -3,15 +3,21 @@
 params.picardPath = "/opt/picard/picard.jar"
 params.gatkPath = "/opt/gatk/gatk"
 
+// Number of threads (used in several diffrent modules)
+params.threads = 5
+
+// Number of cycles (used in simpleFilterAmpliconMk)
+params.cycles = 30
+
 // Process - we keep them in modules in ./modules dir and include them here.
 
 // Note:
 // Nextflow requires every process to have a unique name. To reuse the same process we need to
 // include it multiple times, assigning a different alias each time.
 // Docs: https://www.nextflow.io/docs/latest/module.html#module-aliases
-include { samtoolsIndex as samtoolsIndex_1 } from './modules/samtoolsIndex.nf'
-include { samtoolsIndex as samtoolsIndex_2 } from './modules/samtoolsIndex.nf'
-include { samtoolsIndex as samtoolsIndex_3 } from './modules/samtoolsIndex.nf'
+// E.g.:
+//include { samtoolsIndex as samtoolsIndex_2 } from './modules/samtoolsIndex.nf'
+
 
 // Include one-time use modules
 include { samtoolsSort as samtoolsSort } from './modules/samtoolsSort.nf'
@@ -45,18 +51,15 @@ workflow {
     index = bwaIndex(reference_genome)
     bwaMapping(reference_genome, index, reads)
     samtoolsSort(bwaMapping.out)
-    samtoolsIndex_1(samtoolsSort.out)
     samtoolsViewFilter(samtoolsSort.out)
-    samtoolsIndex_2(samtoolsViewFilter.out)
-    bamStats_2(samtoolsViewFilter.out, samtoolsIndex_2.out)
-    simpleFilterAmpliconMk(samtoolsViewFilter.out, samtoolsIndex_2.out)
-    bamStats_1(samtoolsSort.out, samtoolsIndex_1.out)
-    samtoolsIndex_3(simpleFilterAmpliconMk.out)
+    bamStats_2(samtoolsViewFilter.out)
+    simpleFilterAmpliconMk(samtoolsViewFilter.out)
+    bamStats_1(samtoolsSort.out)
     fixReadGroups(simpleFilterAmpliconMk.out)
     samtoolsFaidx(reference_genome)
     gatkCreateSequenceDictionary(reference_genome)
     gatkHaplotypeCaller(reference_genome, samtoolsFaidx.out, gatkCreateSequenceDictionary.out, fixReadGroups.out)
-    bamStats_3(simpleFilterAmpliconMk.out, samtoolsIndex_3.out)
+    bamStats_3(simpleFilterAmpliconMk.out)
     combineJsonFiles_x4(genomeStats.out, bamStats_1.out, bamStats_2.out, bamStats_3.out)
     tabix(gatkHaplotypeCaller.out)
     vcf2fasta(reference_genome, gatkHaplotypeCaller.out, tabix.out)

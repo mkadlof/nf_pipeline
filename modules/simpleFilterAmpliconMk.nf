@@ -1,12 +1,9 @@
-params.cycles = 30
-
 process simpleFilterAmpliconMk {
     input:
-    tuple val(sampleId1), path(inputBam)
-    path(indexBai)
+    tuple val(sampleId1), path(inputBam), path(indexBai)
 
     output:
-    tuple val(sampleId1), path('output_sorted_downsampled.bam')
+    tuple val(sampleId1), path('output_sorted_downsampled.bam'), path('output_sorted_downsampled.bam.bai')
 
     script:
     """

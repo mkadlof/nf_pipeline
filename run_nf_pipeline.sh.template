@@ -5,8 +5,11 @@ nextflow run nf_pipeline.nf \
     -config nextflow.config \
     --reference_genome path/to/reference/genome.fasta \
     --reads 'path/to/reads/sample_id_{1,2}.fastq.gz' \
+    --threads 2 \
+    --cycles 500 \
     -with-dag flowchart.png \
     -with-report report.html \
     -resume
 
-rm .nextflow.log.*
+# If you run in docker, then add:
+# -with-docker nf-pipeline:latest \

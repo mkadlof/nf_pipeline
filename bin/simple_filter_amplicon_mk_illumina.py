@@ -71,6 +71,7 @@ def down_sample_bam(input_bam_path: str,
         if mode == 'single':
             run_mode_single(input_bam_file, chr_id, cycles, output_bam_file)
         elif mode == 'paired':
+            raise NotImplementedError("Paired mode not implemented yet.")
             run_mode_paired(input_bam_file, chr_id, cycles, output_bam_file)
         else:
             msg = f"Unknown mode: {mode}"
