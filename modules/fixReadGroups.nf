@@ -2,7 +2,7 @@ process fixReadGroups {
     publishDir "results/${sampleId}", mode: 'symlink'
 
     input:
-    tuple val(sampleId), path(bam)
+    tuple val(sampleId), path(bam), path(bai)
 
     output:
     tuple val(sampleId), path("${bam.baseName}.rg.bam")
