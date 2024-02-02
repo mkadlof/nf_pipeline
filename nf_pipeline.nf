@@ -1,14 +1,17 @@
 
 // Pipeline configuration
+// Path to the tools used in case it is run not in a Docker
 params.picardPath = "/opt/picard/picard.jar"
 params.gatkPath = "/opt/gatk/gatk"
-params.threads = 5
 
-// Number of threads (used in several diffrent modules)
+// Number of threads (used in several different modules)
 params.threads = 5
 
 // Number of cycles (used in simpleFilterAmpliconMk)
 params.cycles = 30
+
+// Coverage threshold (used in detectLowCoverage)
+params.coverage_threshold = 20
 
 // Process - we keep them in modules in ./modules dir and include them here.
 
@@ -28,6 +31,7 @@ include { samtoolsViewFilter } from './modules/samtoolsViewFilter.nf'
 include { simpleFilterAmpliconMk } from './modules/simpleFilterAmpliconMk.nf'
 include { fixReadGroups } from './modules/fixReadGroups.nf'
 include { gatkHaplotypeCaller } from './modules/gatkHaplotypeCaller.nf'
+include { detectLowCoverage } from './modules/detectLowCoverage.nf'
 include { samtoolsFaidx } from './modules/samtoolsFaidx.nf'
 include { gatkCreateSequenceDictionary } from './modules/gatkCreateSequenceDictionary.nf'
 include { vcf2fasta } from './modules/vcf2fasta.nf'
@@ -55,6 +59,7 @@ workflow {
     samtoolsViewFilter(samtoolsSort.out)
     bamStats_2(samtoolsViewFilter.out)
     simpleFilterAmpliconMk(samtoolsViewFilter.out)
+    detectLowCoverage(simpleFilterAmpliconMk.out)
     bamStats_1(samtoolsSort.out)
     fixReadGroups(simpleFilterAmpliconMk.out)
     samtoolsFaidx(reference_genome)

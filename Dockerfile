@@ -10,10 +10,11 @@ RUN apt update && \
                                            curl \
                                            unzip \
                                            samtools \
+                                           bcftools \
+                                           bedtools \
                                            bwa \
                                            procps \
                                            tabix \
-                                           bcftools \
                                            vim
 
 RUN ln -s /usr/bin/python3 /usr/bin/python

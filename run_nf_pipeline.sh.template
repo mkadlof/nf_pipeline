@@ -7,6 +7,7 @@ nextflow run nf_pipeline.nf \
     --reads 'path/to/reads/sample_id_{1,2}.fastq.gz' \
     --threads 2 \
     --cycles 500 \
+    --coverage_threshold 20 \
     -with-dag flowchart.png \
     -with-report report.html \
     -resume
