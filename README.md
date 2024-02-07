@@ -13,7 +13,10 @@ This pipeline requires the following software to be installed:
 - python 3.9.x
 - bwa
 - samtools
-- nproc
+- bedtools
+- bcftools
+- tabix
+- mafft
 - [picard](https://broadinstitute.github.io/picard/)
 - [gatk4](https://gatk.broadinstitute.org/hc/en-us)
 

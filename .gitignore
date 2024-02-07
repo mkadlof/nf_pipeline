@@ -17,3 +17,6 @@ timeline-*.html
 # caches
 .nextflow
 __pycache__
+
+# Python environment
+.python-version

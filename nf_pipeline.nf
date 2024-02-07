@@ -31,11 +31,13 @@ include { samtoolsViewFilter } from './modules/samtoolsViewFilter.nf'
 include { simpleFilterAmpliconMk } from './modules/simpleFilterAmpliconMk.nf'
 include { fixReadGroups } from './modules/fixReadGroups.nf'
 include { gatkHaplotypeCaller } from './modules/gatkHaplotypeCaller.nf'
-include { detectLowCoverage } from './modules/detectLowCoverage.nf'
+include { detectLowCov } from './modules/detectLowCov.nf'
 include { samtoolsFaidx } from './modules/samtoolsFaidx.nf'
-include { gatkCreateSequenceDictionary } from './modules/gatkCreateSequenceDictionary.nf'
+include { gatkCreateSeqDict } from './modules/gatkCreateSeqDict.nf'
 include { vcf2fasta } from './modules/vcf2fasta.nf'
 include { tabix } from './modules/tabix.nf'
+include { applyLowCovToRef } from './modules/applyLowCovToRef.nf'
+include { maskLowCov } from './modules/maskLowCov.nf'
 
 // Include modules for statistics
 include { genomeStats } from './modules/genomeStats.nf'
@@ -53,20 +55,23 @@ workflow {
 
     // Processes
     genomeStats(reference_genome)
-    index = bwaIndex(reference_genome)
-    bwaMapping(reference_genome, index, reads)
+    bwaIndex(reference_genome)
+    bwaMapping(reference_genome, bwaIndex.out, reads)
     samtoolsSort(bwaMapping.out)
     samtoolsViewFilter(samtoolsSort.out)
     bamStats_2(samtoolsViewFilter.out)
     simpleFilterAmpliconMk(samtoolsViewFilter.out)
-    detectLowCoverage(simpleFilterAmpliconMk.out)
     bamStats_1(samtoolsSort.out)
     fixReadGroups(simpleFilterAmpliconMk.out)
+    detectLowCov(fixReadGroups.out)
     samtoolsFaidx(reference_genome)
-    gatkCreateSequenceDictionary(reference_genome)
-    gatkHaplotypeCaller(reference_genome, samtoolsFaidx.out, gatkCreateSequenceDictionary.out, fixReadGroups.out)
+    gatkCreateSeqDict(reference_genome)
+    gatkHaplotypeCaller(reference_genome, samtoolsFaidx.out, gatkCreateSeqDict.out, fixReadGroups.out)
     bamStats_3(simpleFilterAmpliconMk.out)
     combineJsonFiles_x4(genomeStats.out, bamStats_1.out, bamStats_2.out, bamStats_3.out)
     tabix(gatkHaplotypeCaller.out)
-    vcf2fasta(reference_genome, gatkHaplotypeCaller.out, tabix.out)
+    left = applyLowCovToRef(reference_genome, detectLowCov.out)
+    right = vcf2fasta(reference_genome, gatkHaplotypeCaller.out, tabix.out)
+    combined = left.join(right)
+    maskLowCov(combined)
 }

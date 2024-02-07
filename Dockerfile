@@ -15,6 +15,7 @@ RUN apt update && \
                                            bwa \
                                            procps \
                                            tabix \
+                                           mafft \
                                            vim
 
 RUN ln -s /usr/bin/python3 /usr/bin/python

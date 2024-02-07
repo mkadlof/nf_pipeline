@@ -5,7 +5,7 @@ process tabix {
     tuple val(sampleId), path(variants_vcf, name: 'variants.vcf.gz')
 
     output:
-    path "variants.vcf.gz.tbi"
+    tuple val(sampleId), path("variants.vcf.gz.tbi")
 
     script:
     """

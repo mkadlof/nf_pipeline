@@ -1,6 +1,7 @@
 process genomeStats {
     input:
     path reference_genome
+
     output:
     path 'genomeStats.json.gz'
 

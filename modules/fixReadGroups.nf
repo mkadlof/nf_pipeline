@@ -5,8 +5,7 @@ process fixReadGroups {
     tuple val(sampleId), path(bam), path(bai)
 
     output:
-    tuple val(sampleId), path("${bam.baseName}.rg.bam")
-    tuple val(sampleId), path("${bam.baseName}.rg.bai")
+    tuple val(sampleId), path("${bam.baseName}.rg.bam"), path("${bam.baseName}.rg.bai")
 
     script:
     """

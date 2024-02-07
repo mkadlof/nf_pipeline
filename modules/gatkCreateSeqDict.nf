@@ -1,6 +1,7 @@
-process gatkCreateSequenceDictionary {
+process gatkCreateSeqDict {
     input:
     path reference_genome_fasta, name: 'reference_genome.fasta'
+
     output:
     path "reference_genome.dict"
 
