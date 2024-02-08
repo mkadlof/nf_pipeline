@@ -2,14 +2,15 @@
 
 # This script runs the nextflow pipeline with the given parameters
 nextflow run nf_pipeline.nf \
-    -config nextflow.config \
     --reference_genome path/to/reference/genome.fasta \
     --reads 'path/to/reads/sample_id_{1,2}.fastq.gz' \
-    --threads 2 \
+    --threads 3 \
     --cycles 500 \
     --coverage_threshold 20 \
-    -with-dag flowchart.png \
+    --primers 'path/to/primers.bed'
+    -config nextflow.config \
     -with-report report.html \
+    -with-dag flowchart.png \
     -resume
 
 # If you run in docker, then add:

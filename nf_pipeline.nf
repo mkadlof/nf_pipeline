@@ -13,6 +13,9 @@ params.cycles = 30
 // Coverage threshold (used in detectLowCoverage)
 params.coverage_threshold = 20
 
+// primers
+params.primers = "primers.bed"
+
 // Process - we keep them in modules in ./modules dir and include them here.
 
 // Note:
@@ -29,6 +32,7 @@ include { bwaIndex } from './modules/bwaIndex.nf'
 include { bwaMapping } from './modules/bwaMapping.nf'
 include { samtoolsViewFilter } from './modules/samtoolsViewFilter.nf'
 include { simpleFilterAmpliconMk } from './modules/simpleFilterAmpliconMk.nf'
+include { iVar } from './modules/ivar.nf'
 include { fixReadGroups } from './modules/fixReadGroups.nf'
 include { gatkHaplotypeCaller } from './modules/gatkHaplotypeCaller.nf'
 include { detectLowCov } from './modules/detectLowCov.nf'
@@ -52,6 +56,7 @@ workflow {
     // Channels
     reference_genome = Channel.value(params.reference_genome as Path)
     reads = Channel.fromFilePairs(params.reads)
+    primers = Channel.value(params.primers as Path)
 
     // Processes
     genomeStats(reference_genome)
@@ -61,8 +66,9 @@ workflow {
     samtoolsViewFilter(samtoolsSort.out)
     bamStats_2(samtoolsViewFilter.out)
     simpleFilterAmpliconMk(samtoolsViewFilter.out)
+    iVar(simpleFilterAmpliconMk.out, primers)
     bamStats_1(samtoolsSort.out)
-    fixReadGroups(simpleFilterAmpliconMk.out)
+    fixReadGroups(iVar.out)
     detectLowCov(fixReadGroups.out)
     samtoolsFaidx(reference_genome)
     gatkCreateSeqDict(reference_genome)
