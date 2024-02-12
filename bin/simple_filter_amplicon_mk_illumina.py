@@ -63,8 +63,7 @@ def down_sample_bam(input_bam_path: str,
                     mode: str = 'single') -> None:
     """Down-sample bam file."""
     input_bam_file = pysam.AlignmentFile(input_bam_path, "rb")
-    raw_bam_file_path = input_bam_path.replace(".bam", ".raw.bam")
-    output_bam_file = pysam.AlignmentFile(raw_bam_file_path, "wb", template=input_bam_file)
+    output_bam_file = pysam.AlignmentFile(output_bam_path, "wb", template=input_bam_file)
     list_of_chr = get_list_of_chr(input_bam_file, chromosomes)
     for chr_id in list_of_chr:
         print(f"Processing chromosome {chr_id}...")
@@ -77,13 +76,17 @@ def down_sample_bam(input_bam_path: str,
             msg = f"Unknown mode: {mode}"
             raise ValueError(msg)
     output_bam_file.close()
-    print(f"Output bam file: {raw_bam_file_path} saved.")
-    print(f"Sorting and indexing {output_bam_path} file...")
-    pysam.sort("-o", output_bam_path, raw_bam_file_path)
-    pysam.index(output_bam_path)
+    print(f"Output bam file: {output_bam_path} saved.")
+    sorting_and_indexing(output_bam_path)
     for chr_id in list_of_chr:
         print(f"Mean coverage for {chr_id}", bam_mean_coverage(pysam.AlignmentFile(output_bam_path, 'rb'), chr_id))
     print("Done.")
+
+
+def sorting_and_indexing(bam_path):
+    print(f"Sorting and indexing {bam_path} file...")
+    pysam.sort("-o", bam_path, bam_path)
+    pysam.index(bam_path)
 
 
 def run_mode_single(bam_file: pysam.AlignmentFile, chr_id: str, cycles: int, output_bam: pysam.AlignmentFile) -> None:
